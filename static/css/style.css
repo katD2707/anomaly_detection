@@ -77,3 +77,20 @@ html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Seg
 .analyze-pill{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;padding:10px 16px;border-radius:999px;display:inline-block;box-shadow:0 20px 40px rgba(123,97,255,0.06)}
 
 @media(max-width:900px){.layout{grid-template-columns:1fr;padding:0 14px}.search-box{width:100%}}
+
+/* Pill button styles (light and primary) */
+.pill{display:inline-flex;align-items:center;gap:10px;border-radius:999px;padding:8px 14px;font-weight:600;font-size:14px}
+.pill svg{display:block}
+.pill-light{background:#f6f7f9;color:#0b1220;border:1px solid rgba(12,16,32,0.04);box-shadow:0 8px 20px rgba(12,16,32,0.04)}
+.pill-light:active{transform:translateY(1px)}
+.pill-primary{background:linear-gradient(90deg,var(--accent-2),var(--accent));color:#051426;border:0;box-shadow:0 12px 30px rgba(99,66,255,0.12)}
+.pill-primary svg{filter:drop-shadow(0 3px 6px rgba(11,92,255,0.14))}
+
+/* user menu / avatar */
+.user-menu{display:inline-flex;align-items:center;gap:8px;padding:6px 8px;border-radius:999px}
+.user-menu .avatar{width:36px;height:36px;border-radius:8px}
+.user-name{color:var(--muted);font-size:13px}
+.chev{opacity:0.85}
+
+/* small adjustments for buttons inside rows */
+.controls .row button{margin:4px 0}

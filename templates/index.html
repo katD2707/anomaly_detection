@@ -21,6 +21,13 @@
           <a class="nav-item" href="#">Models</a>
           <a class="nav-item" href="#">Settings</a>
         </nav>
+        <div class="user-menu" title="Profile">
+          <img src="/static/img/avatar.svg" class="avatar" alt="avatar" />
+          <span class="user-name">You</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="chev" aria-hidden>
+            <path d="M6 9l6 6 6-6" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
       </div>
     </header>
 
@@ -32,10 +39,15 @@
         </div>
         <div class="search-wrap">
           <div class="search-box">
-            <i class="fa-solid fa-wave-square" style="color:var(--accent);margin-right:10px;font-size:20px"></i>
-            <input id="hero-input" placeholder="Upload CSV or paste streaming values — try pasting numbers or CSV rows" />
-            <button id="send" class="btn"><i class="fa-solid fa-paper-plane"></i></button>
-          </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right:10px">
+                <path d="M3 12c0 5.523 4.477 10 10 10s10-4.477 10-10S18.523 2 13 2" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3 12h8l2-3 3 6 3-2" stroke="var(--accent-2)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <input id="hero-input" placeholder="Upload CSV or paste streaming values — try pasting numbers or CSV rows" />
+              <button id="send" class="btn pill pill-primary" aria-label="Send">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 2L11 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2l-7 20  -2-8-8-2 20-10z" stroke="currentColor" stroke-width="0" fill="currentColor" opacity="0.9"/></svg>
+              </button>
+            </div>
         </div>
       </div>
     </div>
@@ -44,18 +56,18 @@
       <aside class="controls">
         <h3>Controls</h3>
         <div class="row"><label class="small">Upload CSV:</label><input type="file" id="file" /></div>
-        <div class="row"><button id="ws-connect" class="muted-btn">Connect WS</button><button id="ws-disconnect" class="muted-btn" disabled>Disconnect</button></div>
+        <div class="row"><button id="ws-connect" class="muted-btn pill pill-light">Connect WS</button><button id="ws-disconnect" class="muted-btn pill pill-light" disabled>Disconnect</button></div>
         <div class="row"><input id="ws-input" placeholder="Enter CSV text or numeric value" /></div>
-        <div class="row"><button id="ws-send" class="muted-btn">Send WS</button></div>
+        <div class="row"><button id="ws-send" class="muted-btn pill pill-light">Send WS</button></div>
         <hr />
         <div class="row"><label class="small">Channel:</label><select id="channel-select"></select></div>
         <div class="row"><label class="small">Smoothing</label><input type="checkbox" id="smoothing" /><input type="range" id="smoothing-window" min="1" max="20" value="3" /></div>
         <div class="row"><label class="small">Threshold</label><input type="range" id="threshold" min="0" max="10" step="0.1" value="1.0" /><span id="threshold-val">1.0</span></div>
-        <div class="row"><button id="save-session" class="muted-btn">Save Session</button><button id="load-session" class="muted-btn">Load Session</button></div>
+        <div class="row"><button id="save-session" class="muted-btn pill pill-light">Save Session</button><button id="load-session" class="muted-btn pill pill-light">Load Session</button></div>
         <hr />
         <h3>Chatbot</h3>
         <div class="chatbot-area"><textarea id="chat-prompt" rows="4">Analyze anomalies in the chart</textarea></div>
-        <div class="row"><button id="chat-analyze" class="btn">Analyze</button></div>
+        <div class="row"><button id="chat-analyze" class="btn pill pill-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right:8px"><path d="M5 3v18l15-9L5 3z" fill="white"/></svg>Analyze</button></div>
         <div id="chat-response" class="small" style="margin-top:8px; background:#f7f7f7; padding:8px; border-radius:8px; min-height:50px"></div>
       </aside>
       <main class="panel charts-panel">
@@ -65,8 +77,8 @@
           <canvas id="chart-scores" width="800" height="160"></canvas>
         </div>
         <div style="margin-top:8px">
-          <button id="export-png" class="muted-btn">Export PNG</button>
-          <button id="export-csv" class="muted-btn">Export CSV</button>
+          <button id="export-png" class="muted-btn pill pill-light">Export PNG</button>
+          <button id="export-csv" class="muted-btn pill pill-light">Export CSV</button>
         </div>
       </main>
     </div>
