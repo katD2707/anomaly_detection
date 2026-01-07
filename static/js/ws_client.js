@@ -1,5 +1,8 @@
 let ws = null;
 const out = document.getElementById('out');
+let lastCSVRows = null;
+let lastCSVHeaders = null;
+let lastPredictScores = null;
 
 // Chart setup
 const ctxV = document.getElementById('chart-values').getContext('2d');
@@ -7,8 +10,18 @@ const ctxS = document.getElementById('chart-scores').getContext('2d');
 const maxPoints = 200;
 const dataVals = { labels: [], datasets: [{ label: 'value', data: [], borderColor: 'blue', fill: false, pointBackgroundColor: [] }] };
 const dataScores = { labels: [], datasets: [{ label: 'anomaly score', data: [], borderColor: 'red', fill: false, pointBackgroundColor: [] }] };
-const chartVals = new Chart(ctxV, { type: 'line', data: dataVals, options: { animation: false, responsive: true } });
-const chartScores = new Chart(ctxS, { type: 'line', data: dataScores, options: { animation: false, responsive: true } });
+const commonOptions = {
+  animation: false,
+  responsive: true,
+  maintainAspectRatio: false,
+  elements: { point: { radius: 2 } },
+  scales: {
+    x: { display: true, ticks: { maxRotation: 0, autoSkip: true } },
+    y: { display: true, beginAtZero: false }
+  }
+};
+const chartVals = new Chart(ctxV, { type: 'line', data: dataVals, options: commonOptions });
+const chartScores = new Chart(ctxS, { type: 'line', data: dataScores, options: commonOptions });
 
 function pushPoint(value, score) {
   const nextLabel = (dataVals.labels.length ? parseInt(dataVals.labels[dataVals.labels.length-1]) + 1 : 0).toString();
@@ -69,6 +82,14 @@ function log(msg) {
   // keep hidden pre for debug
 }
 
+// Toast helper
+function showToast(text, kind='info', timeout=4000){
+  const root = document.getElementById('toast-root');
+  if (!root) { alert(text); return; }
+  const t = document.createElement('div'); t.className = 'toast '+kind; t.textContent = text; root.appendChild(t);
+  setTimeout(()=>{ t.style.transition='opacity 280ms'; t.style.opacity='0'; setTimeout(()=>root.removeChild(t),300); }, timeout);
+}
+
 document.getElementById('ws-connect').addEventListener('click', () => {
   if (ws) return;
   ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
@@ -116,28 +137,31 @@ document.getElementById('ws-send').addEventListener('click', () => {
     const fd = new FormData();
     fd.append('file', blob, 'paste.csv');
     fetch('/predict', { method: 'POST', body: fd }).then(async res => {
-      if (!res.ok) return alert('Server error: ' + res.status);
+      if (!res.ok) return showToast('Server error: ' + res.status, 'error');
       const data = await res.json();
       // parse pasted values into rows
       const rows = parseCSV(v);
+      lastCSVRows = rows;
+      lastPredictScores = data.scores;
       setBulk(rows.map(r=>r), data.scores);
       showPreview(v);
-    }).catch(e=>alert('Send failed: '+e.message));
-  } catch(e){ alert('Could not send data: '+e.message); }
+      showToast('Data sent (fallback)', 'info');
+    }).catch(e=>showToast('Send failed: '+e.message, 'error'));
+  } catch(e){ showToast('Could not send data: '+e.message, 'error'); }
 });
 
 // File upload via HTTP predict (keeps main.js simple)
 document.getElementById('send').addEventListener('click', async () => {
   // hero send uses file input if present
   const f = document.getElementById('file').files[0];
-  if (!f) return alert('Select a CSV file');
+  if (!f) return showToast('Select a CSV file', 'warn');
   await uploadFileAndSet(f);
 });
 
 // file-send button
 document.getElementById('file-send').addEventListener('click', async () => {
   const f = document.getElementById('file').files[0];
-  if (!f) return alert('Select a CSV file');
+  if (!f) return showToast('Select a CSV file', 'warn');
   await uploadFileAndSet(f);
 });
 
@@ -153,24 +177,33 @@ async function uploadFileAndSet(f){
   try{
     const fd = new FormData(); fd.append('file', f);
     const res = await fetch('/predict', { method: 'POST', body: fd });
-    if (!res.ok) return alert('Server error: '+res.status);
+    if (!res.ok) return showToast('Server error: '+res.status, 'error');
     const data = await res.json();
     const text = await f.text();
     const rows = parseCSV(text);
+    lastCSVRows = rows;
+    lastPredictScores = data.scores;
     setBulk(rows.map(r=>r), data.scores);
     showPreview(text);
+    showToast('File uploaded and plotted', 'info');
   } catch(e){ alert('Upload failed: '+e.message); }
 }
 
 function parseCSV(text){
   // basic CSV parser: split rows and commas, convert to numbers when possible
   const lines = text.replace(/\r/g,'').trim().split('\n').filter(l=>l.trim().length>0);
-  if (lines.length<=1) return lines.map(l=>l.split(/,|\s+/).map(n=>Number(n)));
+  if (lines.length<=1) {
+    lastCSVHeaders = null;
+    lastCSVRows = lines.map(l=>l.split(/,|\s+/).map(n=>Number(n)));
+    return lastCSVRows;
+  }
   // detect if first line is header (non-numeric)
   const first = lines[0].split(/,|\s+/);
   const hasHeader = first.some(cell=>isNaN(Number(cell)));
   const dataLines = hasHeader ? lines.slice(1) : lines;
   const rows = dataLines.map(l=>l.split(/,|\s+/).map(c=>{ const v=Number(c); return isNaN(v)?c:v;}));
+  lastCSVHeaders = hasHeader ? first : null;
+  lastCSVRows = rows;
   return rows;
 }
 
@@ -182,7 +215,10 @@ function showPreview(text){
   const max = Math.min(rows.length, 5);
   const cols = Math.max(...rows.slice(0,max).map(r=>r.length));
   let html = '<table><thead><tr>';
-  for(let c=0;c<cols;c++) html += `<th>Col ${c+1}</th>`;
+  for(let c=0;c<cols;c++){
+    const title = (lastCSVHeaders && lastCSVHeaders[c]) ? lastCSVHeaders[c] : `Col ${c+1}`;
+    html += `<th data-col="${c}" class="col-header">${title}</th>`;
+  }
   html += '</tr></thead><tbody>';
   for(let i=0;i<max;i++){
     html += '<tr>';
@@ -191,6 +227,20 @@ function showPreview(text){
   }
   html += '</tbody></table>';
   container.innerHTML = html;
+  // attach header click handlers to choose column for plotting
+  container.querySelectorAll('.col-header').forEach(th => th.addEventListener('click', (e)=>{
+    const col = parseInt(th.getAttribute('data-col'));
+    // set channel-select to this column
+    const chSel = document.getElementById('channel-select');
+    chSel.innerHTML = '';
+    const opt = document.createElement('option'); opt.value = col; opt.innerText = (lastCSVHeaders && lastCSVHeaders[col])? lastCSVHeaders[col] : ('Col '+(col+1));
+    chSel.appendChild(opt);
+    // re-set bulk using selected column
+    if (lastCSVRows && lastPredictScores) {
+      setBulk(lastCSVRows.map(r=>r), lastPredictScores);
+      showToast('Selected column '+(col+1)+' for plotting', 'info');
+    }
+  }));
 }
 
 // Chatbot analyze button
@@ -244,11 +294,11 @@ function applySmoothing(arr, window){
 document.getElementById('save-session').addEventListener('click', ()=>{
   const sess = {values: dataVals.datasets[0].data, scores: dataScores.datasets[0].data};
   localStorage.setItem('md_session', JSON.stringify(sess));
-  alert('Session saved');
+  showToast('Session saved', 'info');
 });
 document.getElementById('load-session').addEventListener('click', ()=>{
   const s = localStorage.getItem('md_session');
-  if (!s) return alert('No session saved');
+  if (!s) return showToast('No session saved', 'warn');
   const sess = JSON.parse(s);
   setBulk(sess.values.map(v=>Array.isArray(v)?v:[v]), sess.scores);
 });

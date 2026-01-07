@@ -111,3 +111,10 @@ html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Seg
 .csv-preview th{background:transparent;text-align:left;padding:6px 8px;color:var(--muted);font-weight:600}
 .csv-preview td{padding:6px 8px;border-top:1px solid rgba(12,16,32,0.03)}
 .csv-preview .empty{color:var(--muted);padding:8px}
+
+/* toast notifications */
+.toast-root{position:fixed;right:20px;bottom:22px;z-index:1200;display:flex;flex-direction:column;gap:8px}
+.toast{background:linear-gradient(180deg,#fff,#fbfdff);padding:10px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(12,16,32,0.08);border:1px solid rgba(12,16,32,0.04);min-width:200px;color:#071433;font-weight:600}
+.toast.info{border-left:4px solid var(--accent)}
+.toast.warn{border-left:4px solid #ff8a65}
+.toast.error{border-left:4px solid #ff5c7a}
