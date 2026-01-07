@@ -86,8 +86,12 @@ function log(msg) {
 function showToast(text, kind='info', timeout=4000){
   const root = document.getElementById('toast-root');
   if (!root) { alert(text); return; }
-  const t = document.createElement('div'); t.className = 'toast '+kind; t.textContent = text; root.appendChild(t);
-  setTimeout(()=>{ t.style.transition='opacity 280ms'; t.style.opacity='0'; setTimeout(()=>root.removeChild(t),300); }, timeout);
+  const t = document.createElement('div'); t.className = 'toast '+kind;
+  const close = document.createElement('button'); close.className='close-btn'; close.innerHTML='×';
+  close.addEventListener('click', ()=>{ if (t.parentNode) t.parentNode.removeChild(t); });
+  const span = document.createElement('div'); span.style.display='inline-block'; span.style.marginRight='8px'; span.textContent = text;
+  t.appendChild(close); t.appendChild(span); root.appendChild(t);
+  setTimeout(()=>{ if (t.parentNode){ t.style.transition='opacity 280ms, transform 280ms'; t.style.opacity='0'; t.style.transform='translateY(8px)'; setTimeout(()=>{ if (t.parentNode) t.parentNode.removeChild(t); },300); } }, timeout);
 }
 
 document.getElementById('ws-connect').addEventListener('click', () => {
@@ -126,20 +130,18 @@ document.getElementById('ws-disconnect').addEventListener('click', () => {
 
 document.getElementById('ws-send').addEventListener('click', () => {
   const v = document.getElementById('ws-input').value;
-  if (!v) return alert('Enter CSV text or numeric value');
+  if (!v) return showToast('Enter CSV text or numeric value', 'warn');
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(v);
     return;
   }
-  // fallback: send as a temporary CSV file to /predict
+  // fallback: POST as CSV to /predict
   try {
     const blob = new Blob([v], { type: 'text/csv' });
-    const fd = new FormData();
-    fd.append('file', blob, 'paste.csv');
+    const fd = new FormData(); fd.append('file', blob, 'paste.csv');
     fetch('/predict', { method: 'POST', body: fd }).then(async res => {
       if (!res.ok) return showToast('Server error: ' + res.status, 'error');
       const data = await res.json();
-      // parse pasted values into rows
       const rows = parseCSV(v);
       lastCSVRows = rows;
       lastPredictScores = data.scores;
@@ -151,22 +153,31 @@ document.getElementById('ws-send').addEventListener('click', () => {
 });
 
 // File upload via HTTP predict (keeps main.js simple)
+// hero send / upload handling: if hero-file selected upload; otherwise send pasted text
 document.getElementById('send').addEventListener('click', async () => {
-  // hero send uses file input if present
-  const f = document.getElementById('file').files[0];
-  if (!f) return showToast('Select a CSV file', 'warn');
-  await uploadFileAndSet(f);
+  const hf = document.getElementById('hero-file');
+  const f = hf && hf.files && hf.files[0];
+  const pasted = document.getElementById('hero-input').value;
+  if (f) {
+    await uploadFileAndSet(f);
+    return;
+  }
+  if (pasted) {
+    // send via WS or fallback to predict
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(pasted);
+      showToast('Sent via WebSocket', 'info');
+    } else {
+      // reuse ws-send fallback logic
+      document.getElementById('ws-send').click();
+    }
+    return;
+  }
+  showToast('Paste values or choose a CSV file in the hero box', 'warn');
 });
 
-// file-send button
-document.getElementById('file-send').addEventListener('click', async () => {
-  const f = document.getElementById('file').files[0];
-  if (!f) return showToast('Select a CSV file', 'warn');
-  await uploadFileAndSet(f);
-});
-
-// preview on file select
-document.getElementById('file').addEventListener('change', async (ev) => {
+// hero file change preview
+document.getElementById('hero-file').addEventListener('change', async (ev) => {
   const f = ev.target.files && ev.target.files[0];
   if (!f) { document.getElementById('csv-preview').innerHTML = '<div class="empty">No file selected</div>'; return; }
   const txt = await f.text();

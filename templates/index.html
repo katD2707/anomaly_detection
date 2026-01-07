@@ -32,20 +32,23 @@
     </header>
 
     <div class="hero">
-      <div class="hero-inner">
+        <div class="hero-inner">
         <div>
           <div class="title">Realtime Anomaly Detection</div>
           <div class="subtitle">Visualize time series, detect anomalies in real-time and get a quick natural-language analysis.</div>
         </div>
         <div class="search-wrap">
           <div class="search-box">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right:10px">
-                <path d="M3 12c0 5.523 4.477 10 10 10s10-4.477 10-10S18.523 2 13 2" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M3 12h8l2-3 3 6 3-2" stroke="var(--accent-2)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <label class="hero-file-label" title="Upload CSV">
+                <input id="hero-file" type="file" accept=".csv" style="display:none" />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right:10px">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M17 3v8H7V3" stroke="var(--accent-2)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </label>
               <input id="hero-input" placeholder="Upload CSV or paste streaming values — try pasting numbers or CSV rows" />
-              <button id="send" class="btn pill pill-primary" aria-label="Send">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 2L11 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2l-7 20  -2-8-8-2 20-10z" stroke="currentColor" stroke-width="0" fill="currentColor" opacity="0.9"/></svg>
+              <button id="send" class="btn icon-btn" aria-label="Send">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 2L11 13" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2l-7 20-2-8-8-2 20-10z" stroke="white" stroke-width="0" fill="white" opacity="0.95"/></svg>
               </button>
             </div>
         </div>
@@ -55,20 +58,14 @@
     <div class="layout main-grid">
       <aside class="controls">
         <h3>Controls</h3>
-        <div class="row file-row">
-          <label class="small">Upload CSV:</label>
-          <div class="file-controls">
-            <input type="file" id="file" class="file-input" />
-            <button id="file-send" class="muted-btn pill pill-light">Upload &amp; Send</button>
-          </div>
-        </div>
+        <div class="row"><label class="small">Upload CSV:</label><div class="small">Use the hero box to upload or paste CSV</div></div>
         <div id="csv-preview" class="csv-preview" aria-live="polite"></div>
         <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
         <div class="row"><button id="ws-connect" class="muted-btn pill pill-light">Connect WS</button><button id="ws-disconnect" class="muted-btn pill pill-light" disabled>Disconnect</button></div>
         <div class="row"><textarea id="ws-input" class="input-box" rows="4" placeholder="Enter CSV text or numeric values (one per line) or paste CSV rows here"></textarea></div>
         <div class="row"><button id="ws-send" class="muted-btn pill pill-light">Send WS</button></div>
         <hr />
-        <div class="row"><label class="small">Channel:</label><select id="channel-select"></select></div>
+        <div class="row"><label class="small">Channel:</label><select id="channel-select"></select><select id="column-dropdown" style="margin-left:8px"></select></div>
         <div class="row"><label class="small">Smoothing</label><input type="checkbox" id="smoothing" /><input type="range" id="smoothing-window" min="1" max="20" value="3" /></div>
         <div class="row"><label class="small">Threshold</label><input type="range" id="threshold" min="0" max="10" step="0.1" value="1.0" /><span id="threshold-val">1.0</span></div>
         <div class="row"><button id="save-session" class="muted-btn pill pill-light">Save Session</button><button id="load-session" class="muted-btn pill pill-light">Load Session</button></div>
@@ -93,6 +90,7 @@
 
     <pre id="out" style="display:none"></pre>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     <script src="/static/js/main.js"></script>
     <script src="/static/js/ws_client.js"></script>
   </body>
