@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>MaintainceAnomalyDetection</title>
+  </head>
+  <body>
+    <h1>MaintainceAnomalyDetection</h1>
+    <p>Upload a CSV of numeric sensor readings (columns are features, rows are timesteps) or stream live values.</p>
+
+    <div style="display:flex; gap:20px;">
+      <div style="flex:1;">
+        <h3>Controls</h3>
+        <label>Upload CSV:</label>
+        <input type="file" id="file" />
+        <button id="send">Send</button>
+        <hr />
+        <label>WebSocket demo:</label><br />
+        <button id="ws-connect">Connect WS</button>
+        <button id="ws-disconnect" disabled>Disconnect</button>
+        <br /><br />
+        <input id="ws-input" placeholder="Enter CSV text or numeric value" style="width:100%" />
+        <button id="ws-send">Send WS</button>
+        <hr />
+        <label>Channel:</label>
+        <select id="channel-select"></select>
+        <label style="margin-left:12px">Smoothing:</label>
+        <input type="checkbox" id="smoothing" />
+        <label style="margin-left:12px">Smoothing window</label>
+        <input type="range" id="smoothing-window" min="1" max="20" value="3" />
+        <br />
+        <label>Threshold:</label>
+        <input type="range" id="threshold" min="0" max="10" step="0.1" value="1.0" />
+        <span id="threshold-val">1.0</span>
+        <br />
+        <button id="save-session">Save Session</button>
+        <button id="load-session">Load Session</button>
+        <hr />
+        <h3>Chatbot</h3>
+        <textarea id="chat-prompt" rows="4" style="width:100%">Analyze anomalies in the chart</textarea>
+        <button id="chat-analyze">Analyze</button>
+        <div id="chat-response" style="white-space:pre-wrap; margin-top:8px; background:#f7f7f7; padding:8px; min-height:50px;"></div>
+      </div>
+      <div style="flex:2;">
+        <h3>Realtime Charts</h3>
+        <canvas id="chart-values" width="800" height="200"></canvas>
+        <canvas id="chart-scores" width="800" height="200" style="margin-top:12px;"></canvas>
+      </div>
+    </div>
+
+    <pre id="out" style="display:none"></pre>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/ws_client.js"></script>
+  </body>
+</html>

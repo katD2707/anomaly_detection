@@ -1,0 +1,13 @@
+fastapi==0.95.2
+uvicorn[standard]==0.22.0
+pydantic==1.10.11
+pandas==2.1.2
+numpy==1.26.1
+torch==2.2.0
+scikit-learn==1.3.2
+python-multipart==0.0.6
+pytest==7.4.2
+httpx==0.27.0
+
+# Optional LLM integration (install if you want chatbot powered by OpenAI)
+openai==0.27.8
