@@ -94,3 +94,13 @@ html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Seg
 
 /* small adjustments for buttons inside rows */
 .controls .row button{margin:4px 0}
+
+/* file controls and textarea input visuals */
+.file-row{display:flex;flex-direction:column;gap:8px}
+.file-controls{display:flex;gap:8px;align-items:center}
+.file-input{height:40px;padding:6px 10px;border-radius:10px;border:1px solid rgba(12,16,32,0.06);background:transparent}
+.input-box{width:100%;min-height:80px;border-radius:10px;border:1px solid rgba(12,16,32,0.06);padding:10px 12px;background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:inset 0 1px 0 rgba(255,255,255,0.6), 0 6px 20px rgba(12,16,32,0.04);font-family: 'Source Code Pro', monospace;color:#062033}
+.input-box:focus{outline:none;border-color:rgba(11,92,255,0.18);box-shadow:0 10px 30px rgba(11,92,255,0.06)}
+
+/* smaller file input on mobile */
+@media(max-width:600px){.file-controls{flex-direction:column;align-items:stretch}.file-input{width:100%}}
