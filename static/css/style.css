@@ -104,3 +104,10 @@ html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Seg
 
 /* smaller file input on mobile */
 @media(max-width:600px){.file-controls{flex-direction:column;align-items:stretch}.file-input{width:100%}}
+
+/* CSV preview box */
+.csv-preview{margin-top:10px;background:linear-gradient(180deg,#ffffff,#fbfdff);border:1px solid rgba(12,16,32,0.04);padding:10px;border-radius:10px;max-height:140px;overflow:auto;font-size:13px}
+.csv-preview table{width:100%;border-collapse:collapse}
+.csv-preview th{background:transparent;text-align:left;padding:6px 8px;color:var(--muted);font-weight:600}
+.csv-preview td{padding:6px 8px;border-top:1px solid rgba(12,16,32,0.03)}
+.csv-preview .empty{color:var(--muted);padding:8px}

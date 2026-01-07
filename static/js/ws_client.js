@@ -104,27 +104,94 @@ document.getElementById('ws-disconnect').addEventListener('click', () => {
 });
 
 document.getElementById('ws-send').addEventListener('click', () => {
-  if (!ws || ws.readyState !== WebSocket.OPEN) return alert('WS not connected');
   const v = document.getElementById('ws-input').value;
   if (!v) return alert('Enter CSV text or numeric value');
-  ws.send(v);
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(v);
+    return;
+  }
+  // fallback: send as a temporary CSV file to /predict
+  try {
+    const blob = new Blob([v], { type: 'text/csv' });
+    const fd = new FormData();
+    fd.append('file', blob, 'paste.csv');
+    fetch('/predict', { method: 'POST', body: fd }).then(async res => {
+      if (!res.ok) return alert('Server error: ' + res.status);
+      const data = await res.json();
+      // parse pasted values into rows
+      const rows = parseCSV(v);
+      setBulk(rows.map(r=>r), data.scores);
+      showPreview(v);
+    }).catch(e=>alert('Send failed: '+e.message));
+  } catch(e){ alert('Could not send data: '+e.message); }
 });
 
 // File upload via HTTP predict (keeps main.js simple)
 document.getElementById('send').addEventListener('click', async () => {
+  // hero send uses file input if present
   const f = document.getElementById('file').files[0];
   if (!f) return alert('Select a CSV file');
-  const fd = new FormData();
-  fd.append('file', f);
-  const res = await fetch('/predict', { method: 'POST', body: fd });
-  const data = await res.json();
-  if (data.scores) {
-    const text = await f.text();
-    // try to parse CSV values
-    const rows = text.trim().split('\n').slice(1).map(r=>r.split(',').map(Number));
-    setBulk(rows.map(r=>r), data.scores);
-  }
+  await uploadFileAndSet(f);
 });
+
+// file-send button
+document.getElementById('file-send').addEventListener('click', async () => {
+  const f = document.getElementById('file').files[0];
+  if (!f) return alert('Select a CSV file');
+  await uploadFileAndSet(f);
+});
+
+// preview on file select
+document.getElementById('file').addEventListener('change', async (ev) => {
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) { document.getElementById('csv-preview').innerHTML = '<div class="empty">No file selected</div>'; return; }
+  const txt = await f.text();
+  showPreview(txt);
+});
+
+async function uploadFileAndSet(f){
+  try{
+    const fd = new FormData(); fd.append('file', f);
+    const res = await fetch('/predict', { method: 'POST', body: fd });
+    if (!res.ok) return alert('Server error: '+res.status);
+    const data = await res.json();
+    const text = await f.text();
+    const rows = parseCSV(text);
+    setBulk(rows.map(r=>r), data.scores);
+    showPreview(text);
+  } catch(e){ alert('Upload failed: '+e.message); }
+}
+
+function parseCSV(text){
+  // basic CSV parser: split rows and commas, convert to numbers when possible
+  const lines = text.replace(/\r/g,'').trim().split('\n').filter(l=>l.trim().length>0);
+  if (lines.length<=1) return lines.map(l=>l.split(/,|\s+/).map(n=>Number(n)));
+  // detect if first line is header (non-numeric)
+  const first = lines[0].split(/,|\s+/);
+  const hasHeader = first.some(cell=>isNaN(Number(cell)));
+  const dataLines = hasHeader ? lines.slice(1) : lines;
+  const rows = dataLines.map(l=>l.split(/,|\s+/).map(c=>{ const v=Number(c); return isNaN(v)?c:v;}));
+  return rows;
+}
+
+function showPreview(text){
+  const container = document.getElementById('csv-preview');
+  const rows = parseCSV(text);
+  if (!rows || rows.length===0){ container.innerHTML = '<div class="empty">No preview available</div>'; return; }
+  // show first 5 rows and up to 6 columns
+  const max = Math.min(rows.length, 5);
+  const cols = Math.max(...rows.slice(0,max).map(r=>r.length));
+  let html = '<table><thead><tr>';
+  for(let c=0;c<cols;c++) html += `<th>Col ${c+1}</th>`;
+  html += '</tr></thead><tbody>';
+  for(let i=0;i<max;i++){
+    html += '<tr>';
+    for(let c=0;c<cols;c++) html += `<td>${rows[i][c]!==undefined?rows[i][c]:''}</td>`;
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
 
 // Chatbot analyze button
 document.getElementById('chat-analyze').addEventListener('click', async () => {
