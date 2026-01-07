@@ -59,6 +59,10 @@ def _rate_limit(key: str):
 
 app = FastAPI(title="MaintainceAnomalyDetection")
 
+# register middleware for auth/rate-limiting
+from .middleware import APIMiddleware
+app.add_middleware(APIMiddleware)
+
 ROOT = Path(__file__).resolve().parents[2]
 
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
