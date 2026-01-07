@@ -136,6 +136,26 @@ document.getElementById('chat-analyze').addEventListener('click', async () => {
   document.getElementById('chat-response').textContent = j.analysis;
 });
 
+// Export PNG and CSV
+document.getElementById('export-png').addEventListener('click', ()=>{
+  const link = document.createElement('a');
+  link.href = chartVals.toBase64Image();
+  link.download = 'values.png';
+  link.click();
+});
+
+document.getElementById('export-csv').addEventListener('click', ()=>{
+  const rows = [['index','value','score']];
+  for (let i=0;i<dataVals.labels.length;i++){
+    rows.push([dataVals.labels[i], dataVals.datasets[0].data[i], dataScores.datasets[0].data[i]]);
+  }
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'chart_data.csv'; a.click();
+  URL.revokeObjectURL(url);
+});
+
 // smoothing control
 document.getElementById('smoothing-window').addEventListener('input', ()=>{
   document.getElementById('smoothing-window').title = document.getElementById('smoothing-window').value;

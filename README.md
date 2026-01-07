@@ -96,6 +96,20 @@ UI controls
 - **Threshold**: adjust the anomaly score threshold used to highlight suspicious points on the chart.
 - **Save/Load Session**: persist the current chart data in `localStorage` for later inspection.
 
+Push to remote
+
+To push this repository to GitHub manually:
+
+```powershell
+cd "d:/FPT Software/Predictive Maintainance/anomaly_detection/MaintainceAnomalyDetection"
+git remote add origin <your-remote-url>
+git push -u origin main
+```
+
+Redis rate-limiting
+
+To enable persistent rate-limiting, set `REDIS_URL` in your environment (e.g. `redis://localhost:6379/0`) and the server will use Redis for request counts. If not set, the server uses a lightweight in-memory fallback suitable for demos.
+
 License
 
 This project is released under the MIT License. See `LICENSE` for details.

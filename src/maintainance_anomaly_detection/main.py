@@ -14,31 +14,48 @@ import time
 # Simple API key protection for sensitive endpoints (set MAINTAINANCE_API_KEY env var)
 API_KEY = os.environ.get('MAINTAINANCE_API_KEY')
 
-# Simple rate limiter for `/analyze` (per-key or per-IP)
-RATE_LIMIT = {}
-RATE_LIMIT_MAX = 60  # requests
-RATE_LIMIT_WINDOW = 60  # seconds
+# Rate limiting configuration
+RATE_LIMIT_MAX = int(os.environ.get('RATE_LIMIT_MAX', 60))  # requests
+RATE_LIMIT_WINDOW = int(os.environ.get('RATE_LIMIT_WINDOW', 60))  # seconds
+
+# Optional Redis-backed limiter
+REDIS_URL = os.environ.get('REDIS_URL')
+redis_client = None
+if REDIS_URL:
+    try:
+        import redis
+        redis_client = redis.from_url(REDIS_URL)
+    except Exception:
+        redis_client = None
 
 def _check_api_key(request: Request):
     if API_KEY is None:
         return True
-    # look in header first
     key = request.headers.get('x-api-key')
     if not key:
-        # fallback to query param
         key = request.query_params.get('api_key')
     return key == API_KEY
 
 def _rate_limit(key: str):
-    now = time.time()
-    times = RATE_LIMIT.get(key, [])
-    # keep only recent
-    times = [t for t in times if now - t < RATE_LIMIT_WINDOW]
-    if len(times) >= RATE_LIMIT_MAX:
-        return False
-    times.append(now)
-    RATE_LIMIT[key] = times
-    return True
+    now = int(time.time())
+    if redis_client:
+        # use Redis INCR with expiry
+        try:
+            k = f"rl:{key}:{now // RATE_LIMIT_WINDOW}"
+            val = redis_client.incr(k)
+            if val == 1:
+                redis_client.expire(k, RATE_LIMIT_WINDOW)
+            return val <= RATE_LIMIT_MAX
+        except Exception:
+            pass
+    # fallback: simple in-memory window
+    if not hasattr(_rate_limit, 'store'):
+        _rate_limit.store = {}
+    store = _rate_limit.store
+    window = now // RATE_LIMIT_WINDOW
+    k = f"{key}:{window}"
+    store[k] = store.get(k, 0) + 1
+    return store[k] <= RATE_LIMIT_MAX
 
 app = FastAPI(title="MaintainceAnomalyDetection")
 
@@ -83,7 +100,7 @@ async def predict(file: UploadFile = File(...)):
 
 
 @app.post('/analyze')
-async def analyze(payload: dict):
+async def analyze(request: Request, payload: dict):
     """Simple analysis endpoint. Accepts JSON with keys: 'values' (list) or 'scores' (list)
     Returns a textual summary of detected anomalies using a simple threshold (mean+2*std).
     """
@@ -92,6 +109,13 @@ async def analyze(payload: dict):
     scores = payload.get('scores')
     if scores is None and values is None:
         raise HTTPException(status_code=400, detail='provide values or scores')
+    # API key enforcement
+    if not _check_api_key(request):
+        raise HTTPException(status_code=401, detail='invalid api key')
+    # rate limit per key or per-ip
+    key = request.client.host if API_KEY is None else request.headers.get('x-api-key') or request.query_params.get('api_key') or 'anon'
+    if not _rate_limit(key):
+        raise HTTPException(status_code=429, detail='rate limit exceeded')
     if scores is None:
         try:
             import pandas as pd
@@ -141,7 +165,12 @@ async def analyze(payload: dict):
 
 @app.websocket('/ws')
 async def websocket_endpoint(websocket: WebSocket):
-    # allow api_key via query string for websocket
+    # allow api_key via query string for websocket; enforce if API_KEY set
+    # check api_key query param before accepting
+    params = dict(websocket.query_params)
+    if API_KEY and params.get('api_key') != API_KEY:
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
     buffer = []
     max_len = 200  # max window length for streaming

@@ -11,3 +11,4 @@ httpx==0.27.0
 
 # Optional LLM integration (install if you want chatbot powered by OpenAI)
 openai==0.27.8
+redis==4.7.0
