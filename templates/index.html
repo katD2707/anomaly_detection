@@ -4,25 +4,44 @@
     <meta charset="utf-8" />
     <title>MaintainceAnomalyDetection</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/static/css/style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a2d9d6f7b1.js" crossorigin="anonymous"></script>
   </head>
   <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <img src="/static/img/favicon.svg" class="brand-logo" alt="logo" />
+          <div class="brand-text">Maintaince <span class="muted">Anomaly</span></div>
+        </div>
+        <nav class="nav">
+          <a class="nav-item" href="#">Dashboard</a>
+          <a class="nav-item" href="#">Models</a>
+          <a class="nav-item" href="#">Settings</a>
+        </nav>
+      </div>
+    </header>
+
     <div class="hero">
-      <div class="search-wrap">
-        <div class="search-box">
-          <i class="fa-solid fa-wave-square" style="color:var(--accent);margin-right:10px;font-size:20px"></i>
-          <input id="hero-input" placeholder="Upload CSV or paste streaming values — try pasting numbers or CSV rows" />
-          <button id="send" class="btn"><i class="fa-solid fa-paper-plane"></i></button>
+      <div class="hero-inner">
+        <div>
+          <div class="title">Realtime Anomaly Detection</div>
+          <div class="subtitle">Visualize time series, detect anomalies in real-time and get a quick natural-language analysis.</div>
+        </div>
+        <div class="search-wrap">
+          <div class="search-box">
+            <i class="fa-solid fa-wave-square" style="color:var(--accent);margin-right:10px;font-size:20px"></i>
+            <input id="hero-input" placeholder="Upload CSV or paste streaming values — try pasting numbers or CSV rows" />
+            <button id="send" class="btn"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
         </div>
       </div>
-      <div class="title">Real-time Anomaly Detection for Factory Sensors</div>
-      <div class="subtitle">Visualize time series, detect anomalies in real-time and get a quick natural-language analysis.</div>
     </div>
 
-    <div class="layout">
-      <div class="controls">
+    <div class="layout main-grid">
+      <aside class="controls">
         <h3>Controls</h3>
         <div class="row"><label class="small">Upload CSV:</label><input type="file" id="file" /></div>
         <div class="row"><button id="ws-connect" class="muted-btn">Connect WS</button><button id="ws-disconnect" class="muted-btn" disabled>Disconnect</button></div>
@@ -38,8 +57,8 @@
         <div class="chatbot-area"><textarea id="chat-prompt" rows="4">Analyze anomalies in the chart</textarea></div>
         <div class="row"><button id="chat-analyze" class="btn">Analyze</button></div>
         <div id="chat-response" class="small" style="margin-top:8px; background:#f7f7f7; padding:8px; border-radius:8px; min-height:50px"></div>
-      </div>
-      <div class="panel">
+      </aside>
+      <main class="panel charts-panel">
         <h3>Realtime Charts</h3>
         <div class="charts">
           <canvas id="chart-values" width="800" height="220"></canvas>
@@ -49,7 +68,7 @@
           <button id="export-png" class="muted-btn">Export PNG</button>
           <button id="export-csv" class="muted-btn">Export CSV</button>
         </div>
-      </div>
+      </main>
     </div>
 
     <pre id="out" style="display:none"></pre>
